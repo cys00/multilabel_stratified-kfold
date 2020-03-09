@@ -1,0 +1,49 @@
+@author: yusheng
+"""
+
+import pandas as pd
+#from sklearn.model_selection import StratifiedKFold
+'''
+instead of stratified k fold 
+we use multilabel stratified k fold for multilabel classification
+to install: pip install iterative-stratification
+'''
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
+
+df = pd.read_csv('/Users/yusheng/Downloads/bengaliai-cv19/train.csv')
+print(df.head())
+df.loc[:,'kfold'] = -1
+
+'''
+good to shuffle the dataset with df.sample()
+frac means the fraction it shuffles and returns
+reset_index(drop=True) drops the previous indexes/names of rows 
+and replace with increasing integers
+'''
+df.sample(frac=1).reset_index(drop=True)
+
+X = df.image_id.values
+'''
+df.{column_name}.values 
+convert a pandas Series into a numpy array
+'''
+y = df[['grapheme_root','vowel_diacritic','consonant_diacritic']].values
+'''
+this is a multilabel classification 
+you have one column for X
+and multiple columns for y/label/target
+'''
+ #initialize Multilael Stratified K Fold Class
+mlskf = MultilabelStratifiedKFold(n_splits=5)
+
+for fold, (train_, test_)  in enumerate(mlskf.split(X,y)):
+    print('Fold: ', fold, '\nTrain: ', train_, '\nTest: ', test_)
+    df.loc[test_,'kfold'] = fold
+    #see which fold is used for test
+
+print(df.kfold.value_counts())
+#make sure each fold is used equally for test
+
+df.to_csv('/Users/yusheng/Downloads/bengaliai-cv19/train_kfold.csv', index=False)
+
+
